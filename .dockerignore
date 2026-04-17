@@ -1,0 +1,8 @@
+node_modules/
+*.lock
+target/
+config.json
+blacklist.json
+dynamic_rule.yaml
+*.txt
+*.tmp

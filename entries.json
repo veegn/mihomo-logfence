@@ -1,0 +1,80 @@
+{
+  "103.2.57.6": {
+    "first_seen": 1776432567,
+    "last_seen": 1776434001,
+    "hit_count": 4,
+    "rule_type": "auto"
+  },
+  "9.9.9.9": {
+    "first_seen": 1776432567,
+    "last_seen": 1776434226,
+    "hit_count": 65,
+    "rule_type": "auto"
+  },
+  "172.104.93.80": {
+    "first_seen": 1776432567,
+    "last_seen": 1776434226,
+    "hit_count": 140,
+    "rule_type": "auto"
+  },
+  "github.com": {
+    "first_seen": 1776432567,
+    "last_seen": 1776432567,
+    "hit_count": 1,
+    "rule_type": "auto"
+  },
+  "1.1.1.1": {
+    "first_seen": 1776432567,
+    "last_seen": 1776434220,
+    "hit_count": 17,
+    "rule_type": "auto"
+  },
+  "8.8.8.8": {
+    "first_seen": 1776432567,
+    "last_seen": 1776434226,
+    "hit_count": 127,
+    "rule_type": "auto"
+  },
+  "174.138.29.175": {
+    "first_seen": 1776432567,
+    "last_seen": 1776434226,
+    "hit_count": 127,
+    "rule_type": "auto"
+  },
+  "www.google.com": {
+    "first_seen": 1776432567,
+    "last_seen": 1776432567,
+    "hit_count": 1,
+    "rule_type": "auto"
+  },
+  "dns.google": {
+    "first_seen": 1776432567,
+    "last_seen": 1776433502,
+    "hit_count": 11,
+    "rule_type": "domain_suffix"
+  },
+  "8.8.4.4": {
+    "first_seen": 1776432567,
+    "last_seen": 1776434226,
+    "hit_count": 127,
+    "rule_type": "auto"
+  },
+  "daily-cloudcode-pa.googleapis.com": {
+    "first_seen": 1776432567,
+    "last_seen": 1776432567,
+    "hit_count": 1,
+    "rule_type": "auto"
+  },
+  "103.2.57.5": {
+    "first_seen": 1776432567,
+    "last_seen": 1776434196,
+    "hit_count": 5,
+    "rule_type": "auto"
+  },
+  "149.112.112.112": {
+    "first_seen": 1776432567,
+    "last_seen": 1776434225,
+    "hit_count": 76,
+    "rule_type": "auto"
+  }
+}

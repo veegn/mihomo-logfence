@@ -1,0 +1,8 @@
+{
+  "wsUrl": "ws://192.168.100.1:9090/logs?token=cEtch6ZJ&level=info",
+  "filterKeyword": " error: ",
+  "matchRegex": "-->\\s+([^:\\s]+):\\d+\\s+error:",
+  "minHitCount": 10,
+  "ruleTtlDays": 0,
+  "cidrAggThreshold": 3
+}

@@ -1,0 +1,27 @@
+[package]
+name = "mihomo-logfence"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "mihomo-logfence"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+axum = { version = "0.7", features = ["macros"] }
+tower-http = { version = "0.5", features = ["fs"] }
+tokio-tungstenite = { version = "0.23", features = ["native-tls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+regex = "1"
+futures-util = "0.3"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+[profile.release]
+opt-level = "z"     # Optimize for size
+lto = true          # Link-time optimization
+codegen-units = 1   # Reduce parallel codegen for smaller binary
+panic = "abort"     # Remove panic unwinding code
+strip = true        # Strip debug symbols from binary

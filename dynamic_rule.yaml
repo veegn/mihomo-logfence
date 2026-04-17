@@ -1,0 +1,9 @@
+payload:
+  - IP-CIDR,1.1.1.1/32
+  - IP-CIDR,149.112.112.112/32
+  - IP-CIDR,172.104.93.80/32
+  - IP-CIDR,174.138.29.175/32
+  - IP-CIDR,8.8.4.4/32
+  - IP-CIDR,8.8.8.8/32
+  - IP-CIDR,9.9.9.9/32
+  - DOMAIN-SUFFIX,dns.google

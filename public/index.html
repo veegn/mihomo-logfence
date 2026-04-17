@@ -1,0 +1,886 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mihomo-logfence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --bg2: #1e293b;
+            --glass: rgba(255,255,255,0.05);
+            --border: rgba(255,255,255,0.1);
+            --primary: #3b82f6;
+            --primary-h: #2563eb;
+            --danger: #ef4444;
+            --danger-h: #dc2626;
+            --success: #22c55e;
+            --warn: #f59e0b;
+            --muted: #94a3b8;
+            --text: #f8fafc;
+            --radius: 10px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg) 0%, var(--bg2) 100%);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Layout */
+        .app { display: grid; grid-template-columns: 320px 1fr; min-height: 100vh; }
+
+        .sidebar {
+            background: rgba(0,0,0,0.3);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .main { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+
+        /* Header */
+        .app-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .app-title span { color: var(--primary); }
+
+        /* Status dot */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.6rem 0.85rem;
+            background: rgba(0,0,0,0.25);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.82rem;
+            color: var(--muted);
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--muted);
+            flex-shrink: 0;
+            transition: background 0.4s;
+        }
+        .dot.on { background: var(--success); box-shadow: 0 0 6px var(--success); }
+        .dot.off { background: var(--danger); }
+
+        /* Section titles */
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Form controls */
+        .field { display: flex; flex-direction: column; gap: 0.35rem; }
+        label { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+
+        input[type=text], input[type=number], select {
+            background: rgba(0,0,0,0.25);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.55rem 0.75rem;
+            border-radius: 7px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        input[type=text]:focus, input[type=number]:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.25);
+        }
+        input[type=number] { -moz-appearance: textfield; }
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+
+        /* Buttons */
+        button, .btn {
+            border: none;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            border-radius: 7px;
+            transition: all 0.15s;
+            color: white;
+        }
+        button { display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem; }
+        .btn-primary { background: var(--primary); padding: 0.6rem 1.2rem; font-size: 0.85rem; width: 100%; }
+        .btn-primary:hover:not(:disabled) { background: var(--primary-h); }
+        .btn-sm { padding: 0.3rem 0.65rem; font-size: 0.75rem; border-radius: 5px; white-space: nowrap; }
+        .btn-ghost {
+            background: rgba(255,255,255,0.08);
+            color: var(--muted);
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.14); color: var(--text); }
+        .btn-danger { background: var(--danger); }
+        .btn-danger:hover:not(:disabled) { background: var(--danger-h); }
+        button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        /* Panel */
+        .panel {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .panel-title { font-size: 0.95rem; font-weight: 600; }
+
+        .badge {
+            background: var(--primary);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.15rem 0.55rem;
+            border-radius: 999px;
+        }
+        .badge.pending { background: var(--warn); }
+
+        /* Domain list */
+        .list { display: flex; flex-direction: column; gap: 0.6rem; max-height: 520px; overflow-y: auto; padding-right: 0.3rem; }
+
+        .domains-toolbar {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 180px;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .toolbar-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .helper-text {
+            font-size: 0.74rem;
+            color: var(--muted);
+        }
+
+        .entry {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 0.75rem 0.9rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .entry:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.18); }
+        .entry.is-busy {
+            border-color: rgba(59,130,246,0.45);
+            background: rgba(59,130,246,0.08);
+        }
+        .entry.not-in-yaml { opacity: 0.6; }
+        .entry.not-in-yaml .entry-top::after {
+            content: 'pending';
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--warn);
+            background: rgba(245,158,11,0.15);
+            padding: 0.1rem 0.45rem;
+            border-radius: 4px;
+        }
+
+        .entry-top { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .entry-domain {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+            flex: 1;
+        }
+        .entry-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+        }
+        .hit-badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: white;
+            background: rgba(59,130,246,0.35);
+            padding: 0.1rem 0.45rem;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+        .time-label { font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+
+        .entry-bottom {
+            display: flex;
+            align-items: flex-end;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .entry-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            flex: 1 1 260px;
+            min-width: 0;
+        }
+
+        .entry-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            margin-left: auto;
+        }
+
+        .inline-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            min-width: 180px;
+        }
+
+        .inline-label {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+        }
+
+        .rule-select {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            border-radius: 5px;
+            flex-shrink: 0;
+        }
+
+        .rule-pair {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+        }
+
+        .mini-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.68rem;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .mini-chip.live {
+            color: #bfdbfe;
+            border-color: rgba(59,130,246,0.25);
+            background: rgba(59,130,246,0.12);
+        }
+
+        .mini-chip.pending {
+            color: #fcd34d;
+            border-color: rgba(245,158,11,0.25);
+            background: rgba(245,158,11,0.12);
+        }
+
+        .entry-actions { display: flex; gap: 0.4rem; margin-left: auto; }
+
+        /* Empty state */
+        .empty { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 2rem 0; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        /* Output link */
+        .yaml-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 0.85rem;
+            background: rgba(59,130,246,0.1);
+            border: 1px solid rgba(59,130,246,0.3);
+            border-radius: var(--radius);
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .yaml-link:hover { background: rgba(59,130,246,0.2); }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: white;
+            background: #334155;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            transform: translateY(80px);
+            opacity: 0;
+            transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+            z-index: 999;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 0.4rem; margin-bottom: 1rem; }
+        .tab {
+            padding: 0.4rem 0.9rem;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--muted);
+            transition: all 0.15s;
+        }
+        .tab.active { background: var(--primary); border-color: var(--primary); color: white; }
+
+        @media (max-width: 768px) {
+            .app { grid-template-columns: 1fr; }
+            .sidebar { position: static; height: auto; }
+            .domains-toolbar { grid-template-columns: 1fr; }
+            .entry-controls { margin-left: 0; width: 100%; }
+            .inline-field { min-width: 0; width: 100%; }
+            .entry-actions { margin-left: 0; width: 100%; }
+            .entry-actions button { flex: 1; }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div>
+            <div class="app-title">mihomo-<span>logfence</span></div>
+        </div>
+
+        <div class="status-bar">
+            <div class="dot" id="dot"></div>
+            <span id="statusText">Connecting...</span>
+        </div>
+
+        <div>
+            <div class="section-title">WebSocket</div>
+            <div style="display:flex;flex-direction:column;gap:0.75rem">
+                <div class="field">
+                    <label>URL</label>
+                    <input type="text" id="wsUrl" placeholder="ws://...">
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="section-title">Rule Filters</div>
+            <div style="display:flex;flex-direction:column;gap:0.75rem">
+                <div class="row">
+                    <div class="field">
+                        <label>Min Hit Count</label>
+                        <input type="number" id="minHitCount" min="1" value="1">
+                    </div>
+                    <div class="field">
+                        <label>TTL (days, 0=off)</label>
+                        <input type="number" id="ruleTtlDays" min="0" value="0">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>CIDR /24 Agg. Threshold (0=off)</label>
+                    <input type="number" id="cidrAggThreshold" min="0" value="3">
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-primary" id="saveBtn" onclick="saveConfig()">Save &amp; Apply</button>
+
+        <a href="/dynamic_rule.yaml" target="_blank" class="yaml-link">
+            dynamic_rule.yaml
+        </a>
+
+        <div style="font-size:0.75rem;color:var(--muted);line-height:1.5">
+            Use the link above as a Clash Rule Provider <code>url</code>.
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Captured Domains</div>
+                <div style="display:flex;gap:0.5rem;align-items:center">
+                    <span class="badge" id="activeCount">0</span>
+                    <span style="font-size:0.75rem;color:var(--muted)">in YAML</span>
+                    <span class="badge pending" id="pendingCount" style="display:none"></span>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="setTab('active', this)">Active</button>
+                <button class="tab" onclick="setTab('pending', this)">Pending</button>
+                <button class="tab" onclick="setTab('all', this)">All</button>
+            </div>
+
+            <div class="domains-toolbar">
+                <div class="field">
+                    <label for="domainSearch">Search</label>
+                    <input type="text" id="domainSearch" placeholder="Filter by domain or IP">
+                </div>
+                <div class="field">
+                    <label for="domainSort">Sort</label>
+                    <select id="domainSort">
+                        <option value="recent">Most Recent</option>
+                        <option value="hits">Most Hits</option>
+                        <option value="name">Name</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="toolbar-meta">
+                <div class="helper-text" id="domainsSummary">Showing 0 entries</div>
+                <div class="helper-text">Stored rule type stays editable even when effective rule type is inferred.</div>
+            </div>
+
+            <div class="list" id="domainsList">
+                <div class="empty">No domains captured yet.</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Blacklist</div>
+                <span class="badge" id="blacklistCount">0</span>
+            </div>
+            <div class="list" id="blacklistList">
+                <div class="empty">Blacklist is empty.</div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    let allDomains = [];
+    let globalBlacklist = [];
+    let currentTab = 'active';
+    let pendingMutations = 0;
+    let domainSearch = '';
+    let domainSort = 'recent';
+    const busyDomains = new Set();
+
+    // Utilities
+    function showToast(msg, color = '#3b82f6') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.background = color;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    function relativeTime(unix) {
+        const s = Math.floor(Date.now() / 1000) - unix;
+        if (s < 5) return 'just now';
+        if (s < 60) return `${s}s ago`;
+        if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+        if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+        return `${Math.floor(s / 86400)}d ago`;
+    }
+
+    async function withMutation(fn) {
+        pendingMutations++;
+        try {
+            await fn();
+            await fetchDomains();
+        } catch (e) {
+            showToast('Error: ' + e.message, '#ef4444');
+        } finally {
+            pendingMutations--;
+        }
+    }
+
+    function withDomainBusy(domain, fn) {
+        return withMutation(async () => {
+            busyDomains.add(domain);
+            renderLists();
+            try {
+                await fn();
+            } finally {
+                busyDomains.delete(domain);
+                renderLists();
+            }
+        });
+    }
+
+    function formatRuleLabel(ruleType) {
+        const match = RULE_OPTIONS.find(([value]) => value === ruleType);
+        return match ? match[1] : ruleType;
+    }
+
+    // Tab handling
+    function setTab(tab, el) {
+        currentTab = tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        renderLists();
+    }
+
+    // Config
+    async function fetchConfig() {
+        const res = await fetch('/api/config');
+        const d = await res.json();
+        document.getElementById('wsUrl').value = d.wsUrl;
+        document.getElementById('minHitCount').value = d.minHitCount ?? 1;
+        document.getElementById('ruleTtlDays').value = d.ruleTtlDays ?? 0;
+        document.getElementById('cidrAggThreshold').value = d.cidrAggThreshold ?? 3;
+    }
+
+    async function saveConfig() {
+        const btn = document.getElementById('saveBtn');
+        btn.disabled = true;
+        await withMutation(async () => {
+            const cfg = await (await fetch('/api/config')).json();
+            const res = await fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    wsUrl: document.getElementById('wsUrl').value,
+                    filterKeyword: cfg.filterKeyword,
+                    matchRegex: cfg.matchRegex,
+                    minHitCount: parseInt(document.getElementById('minHitCount').value) || 1,
+                    ruleTtlDays: parseInt(document.getElementById('ruleTtlDays').value) || 0,
+                    cidrAggThreshold: parseInt(document.getElementById('cidrAggThreshold').value) || 0,
+                })
+            });
+            if (res.ok) showToast('Config saved & applied');
+        });
+        btn.disabled = false;
+    }
+
+    // Domain data
+    async function fetchDomains() {
+        const res = await fetch('/api/domains');
+        const d = await res.json();
+        allDomains = d.domains;
+        globalBlacklist = d.blacklist;
+        renderLists();
+    }
+
+    async function fetchStatus() {
+        const res = await fetch('/api/status');
+        const d = await res.json();
+        const dot = document.getElementById('dot');
+        const txt = document.getElementById('statusText');
+        dot.className = 'dot ' + (d.ws_connected ? 'on' : 'off');
+        txt.textContent = d.ws_connected ? 'WebSocket connected' : 'Disconnected - retrying';
+    }
+
+    // Actions
+    async function blacklistDomain(domain) {
+        if (!window.confirm(`Add ${domain} to the blacklist?`)) return;
+        await withDomainBusy(domain, async () => {
+            await fetch('/api/blacklist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domain })
+            });
+            showToast(`${domain} blacklisted`);
+        });
+    }
+
+    async function restoreDomain(domain) {
+        await withMutation(async () => {
+            await fetch('/api/blacklist/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domain })
+            });
+            showToast(`${domain} restored`);
+        });
+    }
+
+    async function deleteDomain(domain) {
+        if (!window.confirm(`Delete ${domain} from captured entries?`)) return;
+        await withDomainBusy(domain, async () => {
+            await fetch('/api/domains', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domain })
+            });
+            showToast(`${domain} deleted`, '#64748b');
+        });
+    }
+
+    async function changeRuleType(domain, ruleType) {
+        await withDomainBusy(domain, async () => {
+            await fetch('/api/domains/rule-type', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domain, rule_type: ruleType })
+            });
+            showToast(`${domain} -> ${formatRuleLabel(ruleType)}`);
+        });
+    }
+
+    // Rendering
+    const RULE_OPTIONS = [
+        ['auto', 'Auto'],
+        ['domain', 'DOMAIN'],
+        ['domain_suffix', 'DOMAIN-SUFFIX'],
+        ['domain_keyword', 'DOMAIN-KEYWORD'],
+        ['ip_cidr', 'IP-CIDR'],
+        ['ip_cidr6', 'IP-CIDR6'],
+    ];
+
+    function buildDomainEntry(entry) {
+        const div = document.createElement('div');
+        const isBusy = busyDomains.has(entry.domain);
+        div.className = 'entry' + (entry.in_yaml ? '' : ' not-in-yaml') + (isBusy ? ' is-busy' : '');
+
+        const top = document.createElement('div');
+        top.className = 'entry-top';
+
+        const name = document.createElement('span');
+        name.className = 'entry-domain';
+        name.textContent = entry.domain;
+
+        const hits = document.createElement('span');
+        hits.className = 'hit-badge';
+        hits.textContent = `x${entry.hit_count}`;
+
+        const time = document.createElement('span');
+        time.className = 'time-label';
+        time.textContent = `Last seen ${relativeTime(entry.last_seen)}`;
+
+        const meta = document.createElement('div');
+        meta.className = 'entry-meta';
+
+        meta.appendChild(hits);
+        meta.appendChild(time);
+        top.appendChild(name);
+        top.appendChild(meta);
+
+        const bottom = document.createElement('div');
+        bottom.className = 'entry-bottom';
+
+        const info = document.createElement('div');
+        info.className = 'entry-info';
+
+        const rulePair = document.createElement('div');
+        rulePair.className = 'rule-pair';
+
+        const storedChip = document.createElement('span');
+        storedChip.className = 'mini-chip';
+        storedChip.textContent = `Stored: ${formatRuleLabel(entry.rule_type)}`;
+
+        const effectiveChip = document.createElement('span');
+        effectiveChip.className = 'mini-chip live' + (entry.in_yaml ? '' : ' pending');
+        effectiveChip.textContent = `Effective: ${formatRuleLabel(entry.resolved_rule_type)}`;
+
+        const firstSeen = document.createElement('span');
+        firstSeen.className = 'mini-chip';
+        firstSeen.textContent = `First seen: ${relativeTime(entry.first_seen)}`;
+
+        rulePair.appendChild(storedChip);
+        rulePair.appendChild(effectiveChip);
+        rulePair.appendChild(firstSeen);
+        info.appendChild(rulePair);
+
+        const sel = document.createElement('select');
+        sel.className = 'rule-select';
+        for (const [val, label] of RULE_OPTIONS) {
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.textContent = label;
+            sel.appendChild(opt);
+        }
+        sel.value = RULE_OPTIONS.some(([v]) => v === entry.rule_type) ? entry.rule_type : 'auto';
+        sel.disabled = isBusy;
+        sel.onchange = () => changeRuleType(entry.domain, sel.value);
+
+        const selectField = document.createElement('div');
+        selectField.className = 'inline-field';
+
+        const selectLabel = document.createElement('span');
+        selectLabel.className = 'inline-label';
+        selectLabel.textContent = isBusy ? 'Updating rule...' : 'Rule type';
+
+        selectField.appendChild(selectLabel);
+        selectField.appendChild(sel);
+
+        const actions = document.createElement('div');
+        actions.className = 'entry-actions';
+
+        const blBtn = document.createElement('button');
+        blBtn.className = 'btn-sm btn-ghost';
+        blBtn.textContent = 'Blacklist';
+        blBtn.disabled = isBusy;
+        blBtn.onclick = () => blacklistDomain(entry.domain);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn-sm btn-danger';
+        delBtn.textContent = 'Delete';
+        delBtn.title = 'Delete';
+        delBtn.disabled = isBusy;
+        delBtn.onclick = () => deleteDomain(entry.domain);
+
+        actions.appendChild(blBtn);
+        actions.appendChild(delBtn);
+        const controls = document.createElement('div');
+        controls.className = 'entry-controls';
+        controls.appendChild(selectField);
+        controls.appendChild(actions);
+
+        bottom.appendChild(info);
+        bottom.appendChild(controls);
+
+        div.appendChild(top);
+        div.appendChild(bottom);
+        return div;
+    }
+
+    function filterAndSortDomains(nonBlacklisted) {
+        const query = domainSearch.trim().toLowerCase();
+        let scoped = nonBlacklisted;
+        if (currentTab === 'active') scoped = scoped.filter(d => d.in_yaml);
+        else if (currentTab === 'pending') scoped = scoped.filter(d => !d.in_yaml);
+
+        if (query) {
+            scoped = scoped.filter(d => d.domain.toLowerCase().includes(query));
+        }
+
+        const sorted = [...scoped];
+        if (domainSort === 'hits') {
+            sorted.sort((a, b) => b.hit_count - a.hit_count || b.last_seen - a.last_seen);
+        } else if (domainSort === 'name') {
+            sorted.sort((a, b) => a.domain.localeCompare(b.domain));
+        } else {
+            sorted.sort((a, b) => b.last_seen - a.last_seen);
+        }
+
+        return sorted;
+    }
+
+    function renderLists() {
+        const domainsList = document.getElementById('domainsList');
+        const blacklistList = document.getElementById('blacklistList');
+        const summary = document.getElementById('domainsSummary');
+
+        const blacklistSet = new Set(globalBlacklist);
+        const nonBlacklisted = allDomains.filter(d => !blacklistSet.has(d.domain));
+
+        const active = nonBlacklisted.filter(d => d.in_yaml);
+        const pending = nonBlacklisted.filter(d => !d.in_yaml);
+
+        document.getElementById('activeCount').textContent = active.length;
+        const pendBadge = document.getElementById('pendingCount');
+        if (pending.length > 0) {
+            pendBadge.textContent = `${pending.length} pending`;
+            pendBadge.style.display = '';
+        } else {
+            pendBadge.style.display = 'none';
+        }
+        document.getElementById('blacklistCount').textContent = globalBlacklist.length;
+
+        const toShow = filterAndSortDomains(nonBlacklisted);
+        summary.textContent = `Showing ${toShow.length} of ${nonBlacklisted.length} entries`;
+
+        domainsList.innerHTML = '';
+        if (toShow.length === 0) {
+            domainsList.innerHTML = `<div class="empty">No entries match the current filters.</div>`;
+        } else {
+            toShow.forEach(d => domainsList.appendChild(buildDomainEntry(d)));
+        }
+
+        blacklistList.innerHTML = '';
+        if (globalBlacklist.length === 0) {
+            blacklistList.innerHTML = '<div class="empty">Blacklist is empty.</div>';
+        } else {
+            globalBlacklist.forEach(domain => {
+                const div = document.createElement('div');
+                div.className = 'entry';
+
+                const top = document.createElement('div');
+                top.className = 'entry-top';
+
+                const name = document.createElement('span');
+                name.className = 'entry-domain';
+                name.textContent = domain;
+                top.appendChild(name);
+
+                const restoreBtn = document.createElement('button');
+                restoreBtn.className = 'btn-sm btn-ghost';
+                restoreBtn.textContent = 'Restore';
+                restoreBtn.style.marginLeft = 'auto';
+                restoreBtn.onclick = () => restoreDomain(domain);
+                top.appendChild(restoreBtn);
+
+                div.appendChild(top);
+                blacklistList.appendChild(div);
+            });
+        }
+    }
+
+    // Init
+    document.getElementById('domainSearch').addEventListener('input', (event) => {
+        domainSearch = event.target.value;
+        renderLists();
+    });
+
+    document.getElementById('domainSort').addEventListener('change', (event) => {
+        domainSort = event.target.value;
+        renderLists();
+    });
+
+    fetchConfig();
+    fetchDomains();
+    fetchStatus();
+
+    setInterval(() => { if (pendingMutations === 0) fetchDomains(); }, 3000);
+    setInterval(fetchStatus, 2000);
+</script>
+</body>
+</html>
